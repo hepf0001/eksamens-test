@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>GSAP Text Animation</title>
+        <style>
+            body {
+                background-color: #fdfcf7;
+                overflow: hidden;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            body,
+            html {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            svg {
+                width: 100%;
+                height: 100%;
+                visibility: hidden;
+            }
+
+            text {
+                fill: #fff;
+                font-size: 0.75rem;
+            }
+        </style>
+    </head>
+    <body>
+        <svg id="mainSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+            <defs>
+                <clipPath id="mask">
+                    <rect x="0" y="0" width="800" height="400" fill="green"></rect>
+                </clipPath>
+                <g class="colorTab">
+                    <rect x="0" y="0" rx="20" width="130" height="320" fill="green"></rect>
+                    <text x="10" y="120" class="label"></text>
+                </g>
+            </defs>
+
+            <g id="container" clip-path="url(#mask)"> </g>
+        </svg>
+        <script>
+            gsap.config({ trialWarn: false });
+            let select = (s) => document.querySelector(s),
+                toArray = (s) => gsap.utils.toArray(s),
+                mainSVG = select("#mainSVG"),
+                container = select("#container"),
+                colorTab = select(".colorTab"),
+                visibleArea = {
+                    value: 160,
+                    offset: 0,
+                },
+                pt = mainSVG.createSVGPoint(),
+                mousePos = { x: 0, y: 0 },
+                colorArray = ["001219", "005f73", "0a9396", "94d2bd", "e9d8a6", "ee9b00", "ca6702", "bb3e03", "ae2012", "9b2226"],
+                extendedColorArray = [
+                    { name: "Rich black", hex: "001219", rgb: [0, 18, 25], cmyk: [100, 28, 0, 90], hsb: [197, 100, 10], hsl: [197, 100, 5], lab: [5, -4, -6] },
+                    { name: "Midnight green", hex: "005f73", rgb: [0, 95, 115], cmyk: [100, 17, 0, 55], hsb: [190, 100, 45], hsl: [190, 100, 23], lab: [37, -16, -18] },
+                    { name: "Dark cyan", hex: "0a9396", rgb: [10, 147, 150], cmyk: [93, 2, 0, 41], hsb: [181, 93, 59], hsl: [181, 88, 31], lab: [55, -30, -11] },
+                    { name: "Tiffany Blue", hex: "94d2bd", rgb: [148, 210, 189], cmyk: [30, 0, 10, 18], hsb: [160, 30, 82], hsl: [160, 41, 70], lab: [80, -24, 4] },
+                    { name: "Vanilla", hex: "e9d8a6", rgb: [233, 216, 166], cmyk: [0, 7, 29, 9], hsb: [45, 29, 91], hsl: [45, 60, 78], lab: [87, -2, 27] },
+                    { name: "Gamboge", hex: "ee9b00", rgb: [238, 155, 0], cmyk: [0, 35, 100, 7], hsb: [39, 100, 93], hsl: [39, 100, 47], lab: [71, 22, 75] },
+                    { name: "Alloy orange", hex: "ca6702", rgb: [202, 103, 2], cmyk: [0, 49, 99, 21], hsb: [30, 99, 79], hsl: [30, 98, 40], lab: [54, 34, 62] },
+                    { name: "Rust", hex: "bb3e03", rgb: [187, 62, 3], cmyk: [0, 67, 98, 27], hsb: [19, 98, 73], hsl: [19, 97, 37], lab: [44, 48, 55] },
+                    { name: "Rufous", hex: "ae2012", rgb: [174, 32, 18], cmyk: [0, 82, 90, 32], hsb: [5, 90, 68], hsl: [5, 81, 38], lab: [38, 55, 44] },
+                    { name: "Auburn", hex: "9b2226", rgb: [155, 34, 38], cmyk: [0, 78, 75, 39], hsb: [358, 78, 61], hsl: [358, 64, 37], lab: [35, 49, 29] },
+                ],
+                spacerX = 66,
+                colorTabArr = [];
+
+            colorArray = colorArray.map((x) => (Array.from(x)[0] == "#" ? x : `#${x}`));
+
+            gsap.set("svg", {
+                visibility: "visible",
+            });
+            /* function checkDistance(a, b) {
+	let value = Math.hypot(a.x - b.x, a.y - b.y);
+	return value < visibleArea.value ? {value: value, result:true} : {value: false};
+} */
+
+            colorArray.forEach((i, c) => {
+                let clone = colorTab.cloneNode(true);
+                container.appendChild(clone);
+                gsap.set(clone, {
+                    x: c * spacerX,
+                });
+                gsap.set(clone.children[0], {
+                    fill: i,
+                    y: 100,
+                });
+                clone.children[1].textContent = extendedColorArray[c].name;
+
+                colorTabArr.push(clone);
+            });
+
+            function cursorPoint(evt) {
+                pt.x = evt.clientX;
+                pt.y = evt.clientY;
+                return pt.matrixTransform(mainSVG.getScreenCTM().inverse());
+            }
+            mainSVG.onpointermove = (e) => {
+                mousePos.x = cursorPoint(e).x;
+                mousePos.y = cursorPoint(e).y - visibleArea.offset;
+            };
+            mainSVG.onmousedown = null;
+
+            let pipeRadius = gsap.utils.pipe();
+
+            let mapOpacity = gsap.utils.pipe(gsap.utils.clamp(0, 100), gsap.utils.mapRange(0, 100, 100, 0));
+
+            let mapRotationn = gsap.utils.pipe(gsap.utils.clamp(0, 100), gsap.utils.mapRange(0, 100, 0, 90));
+            let mapPosY = gsap.utils.pipe(gsap.utils.clamp(0, visibleArea.value), gsap.utils.mapRange(0, visibleArea.value, 100, 200));
+            function update() {
+                //console.log(mousePos.x)
+
+                colorTabArr.forEach((i, c) => {
+                    let deltaX = gsap.getProperty(i, "x") - mousePos.x;
+                    let deltaY = 0; //gsap.getProperty(i, 'y') - mousePos.y;
+                    let value = Math.hypot(gsap.getProperty(i, "x") - mousePos.x + visibleArea.offset, 0 - 0);
+                    gsap.to(i, {
+                        y: mapPosY(value),
+                    });
+                    gsap.to(i.children[1], {
+                        opacity: mapOpacity(value),
+                        //rotation: mapRotationn(value),
+                        transformOrigin: "4% 2%",
+                    });
+                });
+            }
+
+            gsap.ticker.add(update);
+        </script>
+    </body>
+</html>
